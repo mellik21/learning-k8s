@@ -1,0 +1,46 @@
+version: '4.5'
+
+services:
+  users_db:
+    image: 'postgres:latest'
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=users
+    ports:
+      - "5432:5432"
+
+  users-app:
+    image:  epamanastasiiasolomakhina/user-service:1.0.8
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://users_db:5432/users
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password123
+    ports:
+      - "8080:8080"
+    depends_on:
+      - users_db
+
+  posts_db:
+    image: 'postgres:latest'
+    environment:
+      - POSTGRES_USER=admin1
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=posts
+    ports:
+      - "5433:5432"
+
+  posts_app:
+    image: d7103b35060b
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://posts_db:5432/posts
+      - SPRING_DATASOURCE_USERNAME=admin1
+      - SPRING_DATASOURCE_PASSWORD=password123
+      - USER_SERVICE_URL=http://users-app:8080/users/
+    ports:
+      - "8081:8081"
+    depends_on:
+      - posts_db
+
+
+
