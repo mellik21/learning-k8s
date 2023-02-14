@@ -8,7 +8,7 @@ import javax.persistence.*;
 @RequiredArgsConstructor
 @ToString
 @Entity
-@Table(name = "user_")
+@Table(name = "user__")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

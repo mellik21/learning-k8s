@@ -6,12 +6,11 @@ metadata:
 
 spec:
   replicas: 2
-
   strategy:
-      type: RollingUpdate
-      rollingUpdate:
-        maxSurge: 3
-        maxUnavailable: 1
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+      maxUnavailable: 1
 
   selector:
     matchLabels:
@@ -27,7 +26,8 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: epamanastasiiasolomakhina/user-service:1.0.8
+          image: epamanastasiiasolomakhina/user-service:1.0.7
+          # image: epamanastasiiasolomakhina/user-service:2.0.0
           env:
             # Define the environment variable
             - name: SPRING_DATASOURCE_URL

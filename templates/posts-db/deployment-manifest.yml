@@ -56,13 +56,21 @@ spec:
             periodSeconds: 3
 
           volumeMounts:
+            - name: sql-script
+              mountPath: /docker-entrypoint-initdb.d
             - name: posts-storage
               mountPath: /var/lib/pgsql/data
 
       volumes:
+        - name: sql-script
+          configMap:
+              name: posts-initdb-config
+              items:
+                - key: init.sql
+                  path: init.sql
         - name: posts-storage
           persistentVolumeClaim:
-            claimName: posts-volume-claim
+            claimName: posts-db-volume-claim
 
 
 ---

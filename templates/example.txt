@@ -1,0 +1,108 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: post-db
+  namespace: k8s-program
+spec:
+  selector:
+    matchLabels:
+      app: post-db-pod
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: post-db-pod
+        owner: epamkyzzhibekkakimzhanova
+    spec:
+      containers:
+        - name: post-db-pod
+          image: postgres:latest
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: post-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: post-secret
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: post-configmap
+                  key: postsdb
+          livenessProbe:
+            exec:
+              command: [ "pg_isready" ,"-U" ,"$(POSTGRES_USER)", "-d" ,"$(POSTGRES_DB)" ]
+            initialDelaySeconds: 15
+            periodSeconds: 3
+          readinessProbe:
+            exec:
+              command: [ "pg_isready" ,"-U" ,"$(POSTGRES_USER)", "-d" ,"$(POSTGRES_DB)" ]
+            initialDelaySeconds: 15
+            periodSeconds: 3
+          volumeMounts:
+            - name: sql-script
+              mountPath: /docker-entrypoint-initdb.d
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: sql-script
+          configMap:
+            name: post-configmap
+            items:
+              - key: createPostTable.sql
+                path: init-db.sql
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: my-claim
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: my-local-storage
+  namespace: k8s-program
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume
+  namespace: k8s-program
+spec:
+  storageClassName: my-local-storage
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /C/tmp/store3
+  persistentVolumeReclaimPolicy: Retain
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - docker-desktop
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: my-claim
+  namespace: k8s-program
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: my-local-storage
+  resources:
+    requests:
+      storage: 5Gi
+
