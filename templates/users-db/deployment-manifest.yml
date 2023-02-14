@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-db
+  namespace: k8s-program
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-db
+      version: v1
+
+  template:
+    metadata:
+      labels:
+        app: user-db
+        version: v1
+
+    spec:
+      containers:
+        - name: user-db
+          image: postgres:latest
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: users-db-secret
+                  key: username
+                  optional: false
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: users-db-secret
+                  key: password
+                  optional: false
+            - name: POSTGRES_DB
+              value: users
+          envFrom:
+            - configMapRef:
+                name: users-initdb-config
+
+
+          livenessProbe:
+            exec:
+              command: [ "pg_isready" ,"-U" ,"$(POSTGRES_USER)", "-d" ,"$(POSTGRES_DB)" ]
+            initialDelaySeconds: 15
+            periodSeconds: 3
+
+          readinessProbe:
+            exec:
+              command: [ "pg_isready" ,"-U" ,"$(POSTGRES_USER)", "-d" ,"$(POSTGRES_DB)" ]
+            initialDelaySeconds: 15
+            periodSeconds: 3
+
+          volumeMounts:
+            - name: users-storage
+              mountPath: /var/lib/pgsql/data
+
+      volumes:
+        - name: users-storage
+          persistentVolumeClaim:
+            claimName: posts-volume-claim
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-db
+  namespace: k8s-program
+
+spec:
+  selector:
+    app: user-db
+
+  ports:
+    - protocol: TCP
+      port: 5432 #port that the service is running on the cluster
+      targetPort: 5432 #exposed by the service

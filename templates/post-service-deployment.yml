@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: post-service
+  namespace: k8s-program
+
+spec:
+  replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+      maxUnavailable: 1
+
+  selector:
+    matchLabels:
+      app: post-service
+      version: v1
+
+  template:
+    metadata:
+      labels:
+        app: post-service
+        version: v1
+
+    spec:
+      containers:
+        - name: post-service
+          image: epamanastasiiasolomakhina/post-service:2.0.0
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-program-config-map
+                  key: POSTS_SPRING_DATASOURCE_URL
+            - name: USER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-program-config-map
+                  key: USER_SERVICE_URL
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: posts-db-secret
+                  key: username
+                  optional: false
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: posts-db-secret
+                  key: password
+                  optional: false
+
+          ports:
+            - containerPort: 8081
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 300
+            periodSeconds: 30
+
+          readinessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 15
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: post-service-service
+  namespace: k8s-program
+
+spec:
+  type: NodePort #type of the service
+  selector:
+    app: post-service
+
+  ports:
+    - protocol: TCP
+      port: 8081 #port that the service is running on the cluster
+      targetPort: 8081 #exposed by the service
+      # By default and for convenience, the Kubernetes control plane will allocate a port from a range (default: 30000-32767)

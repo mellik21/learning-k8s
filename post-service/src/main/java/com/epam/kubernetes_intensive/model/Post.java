@@ -15,6 +15,8 @@ public class Post {
 
     private String content;
 
+    private String topic;
+
     @Column(name = "user_id")
     private Long userId;
 
@@ -40,5 +42,13 @@ public class Post {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 }

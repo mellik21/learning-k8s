@@ -28,10 +28,10 @@ services:
       - POSTGRES_PASSWORD=password123
       - POSTGRES_DB=posts
     ports:
-      - "5433:5432"
+      - "5432:5432"
 
   posts_app:
-    image: d7103b35060b
+    image: epamanastasiiasolomakhina/post-service:1.0.4
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://posts_db:5432/posts
       - SPRING_DATASOURCE_USERNAME=admin1

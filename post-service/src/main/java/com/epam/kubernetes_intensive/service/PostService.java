@@ -65,9 +65,10 @@ public class PostService {
 
     public Post updatePost(Post post) {
         Post post1 = postRepository.save(post);
-        log.info("POST WAS UPDATED -> "+post1.toString());
 
-        System.out.println("POST WAS UPDATED -> "+post1.toString());
+        log.info("POST WAS UPDATED -> "+post1);
+
+        System.out.println("POST WAS UPDATED -> "+post1);
 
         return post1;
     }
